@@ -123,7 +123,6 @@ class _MainScreenState extends State<MainScreen>
             opacity: animation,
             child: child,
           );
-          );
         },
         transitionDuration: const Duration(milliseconds: 350),
       ),
