@@ -11,6 +11,7 @@ dependencies:
     sdk: flutter
   google_fonts: ^6.2.1
   cupertino_icons: ^1.0.8
+  path_provider: ^2.1.4
 
 dev_dependencies:
   flutter_test:
@@ -26,4 +27,8 @@ flutter:
           weight: 900
         - asset: fonts/NotoSansCJKkr-Regular.otf
           weight: 400
+  assets:
+    - assets/xray/xray.exe
+    - assets/xray/geoip.dat
+    - assets/xray/geosite.dat
   

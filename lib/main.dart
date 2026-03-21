@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'xray_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -96,20 +97,36 @@ class _MainScreenState extends State<MainScreen>
     return '$h:$m:$s';
   }
 
-  void _toggleConnect() {
-    setState(() => connected = !connected);
-    if (connected) {
-      _morphController.forward();
-      elapsedSeconds = 0;
-      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-        setState(() => elapsedSeconds++);
-      });
-    } else {
-      _morphController.reverse();
-      _timer?.cancel();
-      elapsedSeconds = 0;
-    }
+void _toggleConnect() async {
+  if (!connected) {
+    final server = servers[selectedIndex];
+    final success = await XrayService.start(
+      address: server['host'] ?? '',
+      port: int.tryParse(server['port']?.toString() ?? '443') ?? 443,
+      uuid: server['uuid'] ?? '',
+      transport: server['transportType'] ?? 'ws',
+      security: server['security'] ?? 'tls',
+      sni: server['host'] ?? '',
+      bypassChina: false,
+    );
+    if (!success) return;
+  } else {
+    await XrayService.stop();
   }
+
+  setState(() => connected = !connected);
+  if (connected) {
+    _morphController.forward();
+    elapsedSeconds = 0;
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() => elapsedSeconds++);
+    });
+  } else {
+    _morphController.reverse();
+    _timer?.cancel();
+    elapsedSeconds = 0;
+  }
+}
 
   void _goToAddServer() async {
     final result = await Navigator.push(
