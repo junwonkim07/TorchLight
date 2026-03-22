@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'xray_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -457,23 +458,40 @@ class _AddServerScreenState extends State<AddServerScreen>
         setState(() => _hasError = true);
         return;
       }
-      final transport = uri.queryParameters['type']?.toUpperCase() ?? 'TCP';
-      final security = uri.queryParameters['security'] ?? '없음';
+      // type: tcp, ws, grpc 등 (기본값: tcp)
+      final transportRaw = uri.queryParameters['type'] ?? 'tcp';
+      final transport = transportRaw.toLowerCase();
+      
+      // security: tls, reality, none 등 (기본값: none)
+      final security = uri.queryParameters['security'] ?? 'none';
+      
+      // sni: TLS 서버명 (없으면 호스트명 사용)
+      final sni = uri.queryParameters['sni'] ?? uri.host;
+      
+      // 이름 추출
       final name = uri.fragment.isNotEmpty
           ? Uri.decodeComponent(uri.fragment)
           : uri.host;
+      
+      // UUID/ID 추출
+      final fullUuid = uri.userInfo;
+      
       setState(() {
         _parsed = {
           'name': name,
           'host': uri.host,
           'port': uri.port.toString(),
-          'uuid': uri.userInfo.isNotEmpty
-              ? '${uri.userInfo.substring(0, 8)}••••••••'
-              : '—',
-          'transport': '$transport · $security',
+          'uuid': fullUuid,
+          'fullUuid': fullUuid,  // 실제 UUID
+          'transport': transport,
+          'security': security,
+          'sni': sni,
+          'protocol': uri.scheme,
+          'displayMetaInfo': '${uri.scheme.toUpperCase()} · ${transport.toUpperCase()} · ${security.toUpperCase()}',
         };
       });
-    } catch (_) {
+    } catch (e) {
+      print('[AddServer] 파싱 오류: $e');
       setState(() => _hasError = true);
     }
   }
@@ -483,9 +501,17 @@ class _AddServerScreenState extends State<AddServerScreen>
     Navigator.pop(context, {
       'flag': '🌐',
       'name': _parsed!['name'] ?? _parsed!['host']!,
-      'meta': 'VLESS · ${_parsed!['transport']}',
+      'meta': _parsed!['displayMetaInfo'] ?? 'VLESS',
       'ping': '—',
       'pingLevel': 1,
+      // 실제 연결에 필요한 정보
+      'host': _parsed!['host']!,
+      'port': int.tryParse(_parsed!['port'] ?? '443') ?? 443,
+      'uuid': _parsed!['fullUuid']!,
+      'transportType': _parsed!['transport']!,
+      'security': _parsed!['security']!,
+      'sni': _parsed!['sni']!,
+      'protocol': _parsed!['protocol']!,
     });
   }
 
@@ -881,24 +907,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         dnsProxy, (v) => setState(() => dnsProxy = v)),
                   ]),
                   const SizedBox(height: 20),
-                  _sectionLabel('앱별 제외 (이 앱들은 VPN 안 거침)'),
-                  _glassCard([
-                    ...appExclusions.keys.map((app) => Column(children: [
-                      _appRow(app),
-                      if (app != appExclusions.keys.last) _divider(),
-                    ])),
-                    _divider(),
-                    GestureDetector(
-                      onTap: () {},
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        child: Text('+ 앱 추가',
-                            style: GoogleFonts.notoSansKr(
-                                fontSize: 14, fontWeight: FontWeight.w300, color: kGreen)),
+                  // ─── 앱별 제외 (Android 전용) ───
+                  if (Platform.isAndroid) ...[
+                    _sectionLabel('앱별 제외 (이 앱들은 VPN 안 거침)'),
+                    _glassCard([
+                      ...appExclusions.keys.map((app) => Column(children: [
+                        _appRow(app),
+                        if (app != appExclusions.keys.last) _divider(),
+                      ])),
+                      _divider(),
+                      GestureDetector(
+                        onTap: () {},
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          child: Text('+ 앱 추가',
+                              style: GoogleFonts.notoSansKr(
+                                  fontSize: 14, fontWeight: FontWeight.w300, color: kGreen)),
+                        ),
                       ),
-                    ),
-                  ]),
-                  const SizedBox(height: 20),
+                    ]),
+                    const SizedBox(height: 20),
+                  ],
                   _sectionLabel('앱'),
                   _glassCard([
                     _selectRow('언어', ['한국어', 'English', '中文'], language,

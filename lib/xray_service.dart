@@ -43,21 +43,91 @@ class XrayService {
     final dir = await getApplicationSupportDirectory();
     final configFile = File('${dir.path}/config.json');
 
+    // streamSettings 동적 생성
+    final streamSettings = <String, dynamic>{
+      "network": transport.toLowerCase(),
+      "security": security.toLowerCase() == "없음" ? "none" : security.toLowerCase(),
+    };
+
+    // TLS 설정
+    if (security.toLowerCase() != "없음" && security.toLowerCase() != "none") {
+      streamSettings["tlsSettings"] = {
+        "serverName": sni,
+        "allowInsecure": false,
+        "disableSystemRoot": false,
+      };
+    }
+
+    // WebSocket 설정
+    if (transport.toLowerCase() == "ws") {
+      streamSettings["wsSettings"] = {
+        "path": "/",
+        "headers": {}
+      };
+    }
+
+    // gRPC 설정
+    if (transport.toLowerCase() == "grpc") {
+      streamSettings["grpcSettings"] = {
+        "serviceName": "",
+        "multiMode": false
+      };
+    }
+
+    // 라우팅 규칙 동적 생성
+    final routingRules = <Map<String, dynamic>>[
+      {
+        "type": "field",
+        "outboundTag": "direct",
+        "ip": ["geoip:private"]
+      }
+    ];
+
+    if (bypassChina) {
+      routingRules.addAll([
+        {
+          "type": "field",
+          "outboundTag": "direct",
+          "domain": ["geosite:cn"]
+        },
+        {
+          "type": "field",
+          "outboundTag": "direct",
+          "ip": ["geoip:cn"]
+        }
+      ]);
+    }
+
     final config = {
-      "log": {"loglevel": "warning"},
+      "log": {
+        "loglevel": "warning",
+        "access": ""
+      },
       "inbounds": [
         {
           "tag": "socks",
           "port": 10808,
           "listen": "127.0.0.1",
           "protocol": "socks",
-          "settings": {"udp": true}
+          "settings": {
+            "udp": true,
+            "auth": "noauth"
+          },
+          "sniffing": {
+            "enabled": true,
+            "destOverride": ["http", "tls"]
+          }
         },
         {
           "tag": "http",
           "port": 10809,
           "listen": "127.0.0.1",
           "protocol": "http",
+          "settings": {},
+          "sniffing": {
+            "enabled": true,
+            "destOverride": ["http", "tls"]
+          }
         }
       ],
       "outbounds": [
@@ -70,81 +140,101 @@ class XrayService {
                 "address": address,
                 "port": port,
                 "users": [
-                  {"id": uuid, "encryption": "none", "flow": ""}
+                  {
+                    "id": uuid,
+                    "encryption": "none",
+                    "flow": ""
+                  }
                 ]
               }
             ]
           },
-          "streamSettings": {
-            "network": transport,
-            "security": security,
-            if (security == "tls")
-              "tlsSettings": {"serverName": sni, "allowInsecure": false},
-            if (transport == "ws")
-              "wsSettings": {"path": "/"},
-            if (transport == "grpc")
-              "grpcSettings": {"serviceName": ""},
+          "streamSettings": streamSettings,
+          "mux": {
+            "enabled": false
           }
         },
         {
           "tag": "direct",
           "protocol": "freedom",
-          "settings": {}
+          "settings": {
+            "domainStrategy": "UseIPv4"
+          }
         },
         {
           "tag": "block",
           "protocol": "blackhole",
-          "settings": {}
+          "settings": {
+            "response": {
+              "type": "http"
+            }
+          }
         }
       ],
       "routing": {
         "domainStrategy": "IPIfNonMatch",
-        "rules": [
-          {
-            "type": "field",
-            "outboundTag": "direct",
-            "ip": ["geoip:private"]
-          },
-          if (bypassChina) ...[
-            {
-              "type": "field",
-              "outboundTag": "direct",
-              "domain": ["geosite:cn"]
-            },
-            {
-              "type": "field",
-              "outboundTag": "direct",
-              "ip": ["geoip:cn"]
-            }
-          ]
-        ]
+        "rules": routingRules
       }
     };
 
     await configFile.writeAsString(jsonEncode(config));
+    print('[XrayService] config.json created: ${configFile.path}');
     return configFile.path;
   }
 
   // ─── 시스템 프록시 설정 ───
   static Future<void> _setSystemProxy(bool enable) async {
     if (!Platform.isWindows) return;
-    if (enable) {
-      await Process.run('reg', [
-        'add',
-        'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
-        '/v', 'ProxyEnable', '/t', 'REG_DWORD', '/d', '1', '/f'
-      ]);
-      await Process.run('reg', [
-        'add',
-        'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
-        '/v', 'ProxyServer', '/t', 'REG_SZ', '/d', '127.0.0.1:10809', '/f'
-      ]);
-    } else {
-      await Process.run('reg', [
-        'add',
-        'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
-        '/v', 'ProxyEnable', '/t', 'REG_DWORD', '/d', '0', '/f'
-      ]);
+    
+    try {
+      if (enable) {
+        print('[XrayService] 프록시 활성화: 127.0.0.1:10809');
+        
+        // ProxyEnable 활성화
+        final result1 = await Process.run('reg', [
+          'add',
+          'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
+          '/v', 'ProxyEnable', '/t', 'REG_DWORD', '/d', '1', '/f'
+        ]);
+        
+        if (result1.exitCode != 0) {
+          print('[XrayService] 경고: ProxyEnable 레지스트리 설정 실패');
+          print('[XrayService] 오류: ${result1.stderr}');
+        }
+        
+        // ProxyServer 설정
+        final result2 = await Process.run('reg', [
+          'add',
+          'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
+          '/v', 'ProxyServer', '/t', 'REG_SZ', '/d', '127.0.0.1:10809', '/f'
+        ]);
+        
+        if (result2.exitCode != 0) {
+          print('[XrayService] 경고: ProxyServer 레지스트리 설정 실패');
+          print('[XrayService] 오류: ${result2.stderr}');
+        }
+
+        // IE 프록시 캐시 새로고침
+        await Process.run('ipconfig', ['/flushdns']);
+      } else {
+        print('[XrayService] 프록시 비활성화');
+        
+        final result = await Process.run('reg', [
+          'add',
+          'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings',
+          '/v', 'ProxyEnable', '/t', 'REG_DWORD', '/d', '0', '/f'
+        ]);
+        
+        if (result.exitCode != 0) {
+          print('[XrayService] 경고: 프록시 비활성화 실패');
+          print('[XrayService] 오류: ${result.stderr}');
+        }
+
+        // 캐시 새로고침
+        await Process.run('ipconfig', ['/flushdns']);
+      }
+    } catch (e) {
+      print('[XrayService] 시스템 프록시 설정 오류: $e');
     }
   }
 
@@ -178,7 +268,16 @@ class XrayService {
     try {
       if (_process != null) await stop();
 
+      print('[XrayService] 초기화 시작...');
+      
       final xrayPath = await _extractBinary();
+      print('[XrayService] xray.exe 경로: $xrayPath');
+      
+      if (!File(xrayPath).existsSync()) {
+        print('[XrayService] 오류: xray.exe 파일을 찾을 수 없음');
+        return false;
+      }
+
       final configPath = await _writeConfig(
         address: address,
         port: port,
@@ -189,24 +288,55 @@ class XrayService {
         bypassChina: bypassChina,
       );
 
+      if (!File(configPath).existsSync()) {
+        print('[XrayService] 오류: config.json 파일이 생성되지 않음');
+        return false;
+      }
+
+      print('[XrayService] xray.exe 시작 중... (config: $configPath)');
       _process = await Process.start(xrayPath, ['run', '-c', configPath]);
+
+      if (_process == null) {
+        print('[XrayService] 오류: 프로세스 실행 실패');
+        return false;
+      }
+
+      // 프로세스가 살아있는지 확인
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (_process!.kill() is bool && !(_process!.kill() as bool)) {
+        print('[XrayService] 오류: 프로세스가 시작되지 않았거나 즉시 종료됨');
+        _process = null;
+        return false;
+      }
 
       // 로그 출력 (디버그용)
       _process!.stdout.transform(utf8.decoder).listen((log) {
-        print('[xray] $log');
+        if (log.isNotEmpty) print('[xray stdout] $log');
       });
       _process!.stderr.transform(utf8.decoder).listen((log) {
-        print('[xray error] $log');
+        if (log.isNotEmpty) print('[xray stderr] $log');
+      });
+
+      // 프로세스 종료 모니터링
+      _process!.exitCode.then((code) {
+        print('[XrayService] 프로세스 종료 (종료 코드: $code)');
+        _process = null;
       });
 
       if (useSystemProxy) {
-        await Future.delayed(const Duration(milliseconds: 500));
+        // xray 시작 대기
+        await Future.delayed(const Duration(milliseconds: 1000));
+        print('[XrayService] 시스템 프록시 설정 중...');
         await _setSystemProxy(true);
+        print('[XrayService] 시스템 프록시 설정 완료');
       }
 
+      print('[XrayService] 연결 성공!');
       return true;
     } catch (e) {
-      print('[XrayService] start error: $e');
+      print('[XrayService] 시작 오류: $e');
+      print('[XrayService] 스택: ${StackTrace.current}');
+      _process = null;
       return false;
     }
   }
