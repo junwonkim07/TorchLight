@@ -294,34 +294,53 @@ class XrayService {
       }
 
       print('[XrayService] xray.exe 시작 중... (config: $configPath)');
+      print('[XrayService] 명령어: "$xrayPath" run -c "$configPath"');
+      
       _process = await Process.start(xrayPath, ['run', '-c', configPath]);
 
       if (_process == null) {
-        print('[XrayService] 오류: 프로세스 실행 실패');
+        print('[XrayService] 오류: 프로세스 생성 실패');
         return false;
       }
 
-      // 프로세스가 살아있는지 확인
-      await Future.delayed(const Duration(milliseconds: 100));
-      if (_process!.kill() is bool && !(_process!.kill() as bool)) {
-        print('[XrayService] 오류: 프로세스가 시작되지 않았거나 즉시 종료됨');
-        _process = null;
-        return false;
-      }
+      print('[XrayService] 프로세스 시작됨 (PID: ${_process!.pid})');
 
-      // 로그 출력 (디버그용)
+      // ✅ 로그 수집 (Process.start() 직후에 등록해야 함)
+      final stdoutLines = <String>[];
+      final stderrLines = <String>[];
+      
       _process!.stdout.transform(utf8.decoder).listen((log) {
+        stdoutLines.add(log);
         if (log.isNotEmpty) print('[xray stdout] $log');
       });
+
       _process!.stderr.transform(utf8.decoder).listen((log) {
+        stderrLines.add(log);
         if (log.isNotEmpty) print('[xray stderr] $log');
       });
 
-      // 프로세스 종료 모니터링
+      // 프로세스 종료 모니터링 (백그라운드 비동기 처리)
       _process!.exitCode.then((code) {
-        print('[XrayService] 프로세스 종료 (종료 코드: $code)');
+        print('[XrayService] 프로세스 종료 (exit code: $code)');
+        if (code != 0) {
+          print('[XrayService] xray 실행 오류 발생');
+          print('[XrayService] stdout: $stdoutLines');
+          print('[XrayService] stderr: $stderrLines');
+        }
         _process = null;
       });
+
+      // 프로세스가 200ms 내에 죽는지 확인
+      await Future.delayed(const Duration(milliseconds: 200));
+      
+      // exitCode가 완료되었는지 확인 (프로세스가 아직 살아있는지)
+      if (_process!.exitCode.isCompleted) {
+        final code = await _process!.exitCode;
+        print('[XrayService] 오류: xray 프로세스가 즉시 종료됨 (exit code: $code)');
+        print('[XrayService] stderr: ${stderrLines.join('\n')}');
+        _process = null;
+        return false;
+      }
 
       if (useSystemProxy) {
         // xray 시작 대기
@@ -331,10 +350,10 @@ class XrayService {
         print('[XrayService] 시스템 프록시 설정 완료');
       }
 
-      print('[XrayService] 연결 성공!');
+      print('[XrayService] ✅ 연결 성공!');
       return true;
     } catch (e) {
-      print('[XrayService] 시작 오류: $e');
+      print('[XrayService] ❌ 시작 오류: $e');
       print('[XrayService] 스택: ${StackTrace.current}');
       _process = null;
       return false;
@@ -346,5 +365,90 @@ class XrayService {
     await _setSystemProxy(false);
     _process?.kill();
     _process = null;
+  }
+
+  // ─── 진단 (테스트용) ───
+  /// xray 바이너리가 제대로 설정되었는지 확인
+  static Future<Map<String, dynamic>> diagnose() async {
+    final result = <String, dynamic>{};
+    
+    try {
+      // 1. 바이너리 경로 확인
+      final xrayPath = await _extractBinary();
+      result['xrayPath'] = xrayPath;
+      result['xrayExists'] = File(xrayPath).existsSync();
+      
+      print('[Diagnose] xray.exe 경로: $xrayPath');
+      print('[Diagnose] xray.exe 존재: ${result['xrayExists']}');
+      
+      if (!result['xrayExists']) {
+        result['error'] = 'xray.exe 파일이 없습니다';
+        return result;
+      }
+
+      // 2. xray 버전 확인 (xray -version)
+      print('[Diagnose] xray 버전 확인 중...');
+      final versionResult = await Process.run(xrayPath, ['-version'], runInShell: false);
+      result['xrayVersion'] = versionResult.stdout.toString().trimLeft().split('\n')[0];
+      print('[Diagnose] xray 버전: ${result['xrayVersion']}');
+
+      // 3. 설정 파일 생성 테스트
+      print('[Diagnose] 임시 config.json 생성 중...');
+      final tempConfig = await _writeConfig(
+        address: 'example.com',
+        port: 443,
+        uuid: 'test-uuid-1234-5678-90ab-cdefghijklmn',
+        transport: 'tcp',
+        security: 'tls',
+        sni: 'example.com',
+        bypassChina: false,
+      );
+      result['configPath'] = tempConfig;
+      result['configExists'] = File(tempConfig).existsSync();
+      print('[Diagnose] config.json: $tempConfig (존재: ${result['configExists']})');
+
+      // 4. config.json 포맷 검증
+      if (File(tempConfig).existsSync()) {
+        final configContent = File(tempConfig).readAsStringSync();
+        try {
+          final decoded = jsonDecode(configContent);
+          result['configValid'] = true;
+          result['configSize'] = configContent.length;
+          print('[Diagnose] config.json 포맷: 유효 (${configContent.length} bytes)');
+        } catch (e) {
+          result['configValid'] = false;
+          result['configError'] = e.toString();
+          print('[Diagnose] config.json 포맷: ❌ 오류 - $e');
+        }
+      }
+
+      // 5. xray 드라이런 테스트 (-test)
+      print('[Diagnose] xray test 모드 실행 중...');
+      final testResult = await Process.run(
+        xrayPath,
+        ['-test', '-c', tempConfig],
+        timeout: const Duration(seconds: 5),
+      );
+      result['testExitCode'] = testResult.exitCode;
+      result['testStdout'] = testResult.stdout.toString();
+      result['testStderr'] = testResult.stderr.toString();
+      
+      print('[Diagnose] xray test 결과: exit code ${testResult.exitCode}');
+      if (testResult.exitCode == 0) {
+        result['configTestValid'] = true;
+        print('[Diagnose] ✅ config.json이 xray에서 유효합니다');
+      } else {
+        result['configTestValid'] = false;
+        print('[Diagnose] ❌ config.json이 xray에서 거부되었습니다');
+        print('[Diagnose] stderr: ${testResult.stderr}');
+      }
+
+      result['status'] = 'ok';
+    } catch (e) {
+      result['error'] = e.toString();
+      print('[Diagnose] ❌ 진단 오류: $e');
+    }
+
+    return result;
   }
 }
