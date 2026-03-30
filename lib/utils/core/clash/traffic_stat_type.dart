@@ -1,4 +1,0 @@
-enum TrafficStatType {
-  totalUp,
-  totalDn,
-}
