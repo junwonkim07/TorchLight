@@ -1,76 +1,90 @@
-import { getProducts } from 'lib/medusa';
+import ErrorNoKeys from '@/components/react-bricks/error-no-keys';
+import ErrorNoPage from '@/components/react-bricks/error-no-page';
+import config from '@/react-bricks/config';
+import type { Metadata } from 'next';
+import {
+    JsonLd,
+    PageViewer,
+    cleanPage,
+    fetchPage,
+    getBricks,
+    getMetadata,
+    types
+} from 'react-bricks/rsc';
+import { ClickToEdit } from 'react-bricks/rsc/client';
 
-export const metadata = {
-  title: 'Products',
-  description: 'Browse our collection of products'
+const getData = async (
+  slug?: string[]
+): Promise<{
+  page: types.Page | null;
+  errorNoKeys: boolean;
+  errorPage: boolean;
+}> => {
+  let errorPage = false;
+
+  if (!config.apiKey) {
+    return {
+      page: null,
+      errorNoKeys: true,
+      errorPage
+    };
+  }
+
+  const cleanSlug = !slug || slug.length === 0 ? '/' : slug.join('/');
+
+  const page = await fetchPage({
+    slug: cleanSlug,
+    language: 'en',
+    config,
+    fetchOptions: {
+      next: { revalidate: parseInt(process.env.REACT_BRICKS_REVALIDATE || '3', 10) }
+    }
+  }).catch(() => {
+    errorPage = true;
+    return null;
+  });
+
+  return {
+    page,
+    errorNoKeys: false,
+    errorPage
+  };
 };
 
-interface Product {
-  id: string;
-  title: string;
-  handle: string;
-  description: string;
-  price: number;
+export async function generateMetadata({
+  params
+}: {
+  params: { page?: string[] };
+}): Promise<Metadata> {
+  const { page } = await getData(params.page);
+  if (!page?.meta) {
+    return {};
+  }
+
+  return getMetadata(page);
 }
 
-export default async function Page() {
-  try {
-    const response: any = await getProducts();
-    const products: Product[] = response?.products || [];
+export default async function Page({ params }: { params: { page?: string[] } }) {
+  const { page, errorNoKeys, errorPage } = await getData(params.page);
 
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        {/* Hero Section */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-gray-900">Products</h1>
-          <p className="mt-4 text-lg text-gray-600">
-            Discover our carefully curated collection
-          </p>
-        </div>
+  const bricks = getBricks();
+  const pageOk = page ? cleanPage(page, config.pageTypes || [], bricks) : null;
 
-        {/* Products Grid */}
-        {products.length > 0 ? (
-          <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {products.map((product) => (
-              <a
-                key={product.id}
-                href={`/product/${product.handle}`}
-                className="group"
-              >
-                <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200 group-hover:opacity-75">
-                  <div className="h-64 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                    <span className="text-4xl">📦</span>
-                  </div>
-                </div>
-                <h3 className="mt-4 text-sm font-medium text-gray-900">
-                  {product.title}
-                </h3>
-                <p className="mt-2 text-sm text-gray-500 line-clamp-2">
-                  {product.description}
-                </p>
-                <p className="mt-3 text-lg font-semibold text-gray-900">
-                  ${(product.price / 100).toFixed(2)}
-                </p>
-              </a>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No products found</p>
-          </div>
-        )}
-      </div>
-    );
-  } catch (error) {
-    console.error('Error loading products:', error);
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-          <p className="mt-4 text-gray-500">Unable to load products. Please try again later.</p>
-        </div>
-      </div>
-    );
-  }
+  return (
+    <>
+      {page?.meta && <JsonLd page={page} />}
+      {pageOk && !errorPage && !errorNoKeys && <PageViewer page={pageOk} main />}
+      {errorNoKeys && <ErrorNoKeys />}
+      {errorPage && <ErrorNoPage />}
+      {pageOk && config && (
+        <ClickToEdit
+          pageId={pageOk.id}
+          language={pageOk.language}
+          editorPath={config.editorPath || '/admin/editor'}
+          clickToEditSide={config.clickToEditSide}
+        />
+      )}
+    </>
+  );
 }
 

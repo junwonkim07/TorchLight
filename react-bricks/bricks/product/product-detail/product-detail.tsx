@@ -1,7 +1,7 @@
 import { ProductProvider } from '@/components/product/product-context';
 import { Gallery } from 'components/product/gallery';
 import { ProductDescription } from 'components/product/product-description';
-import { Image, Product } from 'lib/shopify/types';
+import { Image, Product } from 'lib/medusa/types';
 import { Suspense } from 'react';
 import { Repeater, types } from 'react-bricks/rsc';
 

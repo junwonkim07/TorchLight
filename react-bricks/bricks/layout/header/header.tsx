@@ -1,7 +1,7 @@
 import CartModal from '@/components/cart/modal';
 import MobileMenu from '@/components/layout/navbar/mobile-menu';
 import Search, { SearchSkeleton } from '@/components/layout/navbar/search';
-import { Menu } from '@/lib/shopify/types';
+import { Menu } from '@/lib/medusa/types';
 import LogoSquare from 'components/logo-square';
 import Link from 'next/link';
 import { Suspense } from 'react';

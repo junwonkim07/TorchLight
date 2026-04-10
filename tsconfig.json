@@ -38,9 +38,13 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "app/page.tsx_",
-    "app/(frontend)/[[...page]]/opengraph-image.tsx_"
-, "app/(frontend)/opengraph-image.tsx_"  ],
+    "app/(frontend)/[[...page]]/opengraph-image.tsx_",
+    "app/(frontend)/opengraph-image.tsx_"
+  ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "my-medusa-store/**",
+    "my-medusa-store-storefront/**",
+    "API Server/**"
   ]
 }

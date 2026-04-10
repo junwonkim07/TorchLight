@@ -1,6 +1,6 @@
 import { GridTileImage } from 'components/grid/tile';
-import { getCollectionProducts } from 'lib/shopify';
-import type { Product } from 'lib/shopify/types';
+import { getCollectionProducts } from 'lib/medusa';
+import type { Product } from 'lib/medusa/types';
 import Link from 'next/link';
 
 export function ThreeItemGridItem({
@@ -48,12 +48,7 @@ export async function ThreeItemGrid() {
   const homepageItems = await getCollectionProducts({
     collection: 'hidden-homepage-featured-items'
   });
-
-  const savedColorMode = typeof window === 'undefined' ? '' : localStorage.getItem('color-mode');
-  const placeholderProduct =
-    savedColorMode === 'dark'
-      ? 'https://dummyimage.com/800x800/374151/9ca3af'
-      : 'https://dummyimage.com/800x800/f3f4f6/9ca3af';
+  const placeholderProduct = 'https://dummyimage.com/800x800/f3f4f6/9ca3af';
 
   if (!homepageItems[0] || !homepageItems[1] || !homepageItems[2]) return null;
 

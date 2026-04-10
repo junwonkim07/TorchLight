@@ -174,7 +174,7 @@ const normalizeProduct = (
     images.push(imageFromUrl(rawProduct.thumbnail || PLACEHOLDER_IMAGE_URL, rawProduct.title));
   }
 
-  const featuredImage = images[0];
+  const featuredImage = images[0] || imageFromUrl(PLACEHOLDER_IMAGE_URL, rawProduct.title);
   const options = normalizeProductOptions(rawProduct);
   const optionNamesById = new Map(options.map((option) => [option.id, option.name]));
 

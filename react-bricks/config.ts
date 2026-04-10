@@ -1,8 +1,8 @@
 import { types } from 'react-bricks/rsc';
 
 import bricks from './bricks';
-import pageTypes from './page-types';
 import NextLink from './next-link';
+import pageTypes from './page-types';
 
 import LogoIcon from '../components/icons/logo.svg';
 
@@ -42,8 +42,7 @@ const config: types.ReactBricksConfig = {
   enablePreviewImage: true,
   enableDefaultEmbedBrick: true,
   //permissions,  Fine-grained permissions for enterprise plans
-  allowAccentsInSlugs: true,
-  experimentalSidebarRepeaterItems: true
+  allowAccentsInSlugs: true
 };
 
 export default config;

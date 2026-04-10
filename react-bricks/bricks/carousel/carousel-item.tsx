@@ -1,19 +1,14 @@
 import { GridTileImage } from '@/components/grid/tile';
-import { getProducts } from '@/lib/shopify';
-import { Product } from '@/lib/shopify/types';
+import { getProducts } from '@/lib/medusa';
+import { Product } from '@/lib/medusa/types';
 
-import { types, Link } from 'react-bricks/rsc';
+import { Link, types } from 'react-bricks/rsc';
 interface CarouselItemProps {
   product: Product;
 }
 
 const CarouselItem: types.Brick<CarouselItemProps> = ({ product }) => {
-  const savedColorMode = typeof window === 'undefined' ? '' : localStorage.getItem('color-mode');
-
-  const placeholderProduct =
-    savedColorMode === 'dark'
-      ? 'https://dummyimage.com/800x800/374151/9ca3af'
-      : 'https://dummyimage.com/800x800/f3f4f6/9ca3af';
+  const placeholderProduct = 'https://dummyimage.com/800x800/f3f4f6/9ca3af';
 
   return (
     <li className="aspect-square w-full flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5">
@@ -65,7 +60,7 @@ CarouselItem.schema = {
         getNoOptionsMessage: (input) => {
           return 'No page found with ' + input;
         },
-        placeholder: 'Search from Shopify...'
+        placeholder: 'Search products...'
       }
     }
   ]

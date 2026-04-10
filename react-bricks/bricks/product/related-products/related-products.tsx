@@ -1,6 +1,6 @@
 import { GridTileImage } from '@/components/grid/tile';
-import { getProductRecommendations } from '@/lib/shopify';
-import { Product } from '@/lib/shopify/types';
+import { getProductRecommendations } from '@/lib/medusa';
+import { Product } from '@/lib/medusa/types';
 import Link from 'next/link';
 import { types } from 'react-bricks/rsc';
 
@@ -44,7 +44,7 @@ const RelatedProducts: types.Brick<RelatedProductsProps> = ({ relatedProducts })
 
 RelatedProducts.schema = {
   name: 'related-products',
-  label: 'Shopify Related Products',
+  label: 'Related Products',
   getDefaultProps: () => ({}),
   getExternalData: async (page) => {
     if (!page?.externalData?.product) {

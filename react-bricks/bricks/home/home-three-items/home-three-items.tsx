@@ -1,6 +1,6 @@
 import { ThreeItemGridItem } from '@/components/grid/three-items';
-import { getCollectionProducts, getProducts } from '@/lib/shopify';
-import { Product } from '@/lib/shopify/types';
+import { getCollectionProducts, getProducts } from '@/lib/medusa';
+import { Product } from '@/lib/medusa/types';
 import { types } from 'react-bricks/rsc';
 
 interface HomeThreeItemsProps {
@@ -18,12 +18,7 @@ const HomeThreeItems: types.Brick<HomeThreeItemsProps> = ({
   secondProduct,
   thirdProduct
 }) => {
-  const savedColorMode = typeof window === 'undefined' ? '' : localStorage.getItem('color-mode');
-
-  const placeholderProduct =
-    savedColorMode === 'dark'
-      ? 'https://dummyimage.com/800x800/374151/9ca3af'
-      : 'https://dummyimage.com/800x800/f3f4f6/9ca3af';
+  const placeholderProduct = 'https://dummyimage.com/800x800/f3f4f6/9ca3af';
 
   const renderGrid = (input: (Product | undefined)[]) => (
     <section className="mx-auto grid max-w-screen-2xl gap-4 px-4 pb-4 md:grid-cols-6 md:grid-rows-2">
@@ -65,7 +60,7 @@ HomeThreeItems.schema = {
   sideEditProps: [
     {
       name: 'shopify',
-      label: 'From Shopify collection',
+      label: 'From product collection',
       type: types.SideEditPropType.Boolean
     },
     {
@@ -93,7 +88,7 @@ HomeThreeItems.schema = {
         getNoOptionsMessage: (input) => {
           return 'No product found for ' + input;
         },
-        placeholder: 'Search from Shopify...'
+        placeholder: 'Search products...'
       }
     },
     {
@@ -121,7 +116,7 @@ HomeThreeItems.schema = {
         getNoOptionsMessage: (input) => {
           return 'No product found for ' + input;
         },
-        placeholder: 'Search from Shopify...'
+        placeholder: 'Search products...'
       }
     },
     {
@@ -149,7 +144,7 @@ HomeThreeItems.schema = {
         getNoOptionsMessage: (input) => {
           return 'No product found for ' + input;
         },
-        placeholder: 'Search from Shopify...'
+        placeholder: 'Search products...'
       }
     }
   ]
