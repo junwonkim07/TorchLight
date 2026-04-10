@@ -155,3 +155,10 @@ export async function updateCartItem(cartId: string, lineId: string, quantity: n
     tags: ['cart']
   });
 }
+
+// Pages / CMS (placeholder - implement based on your CMS)
+export async function getPages() {
+  // If you're using a separate CMS like Medusa's content module or another service,
+  // implement accordingly
+  return [];
+}
