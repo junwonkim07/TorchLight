@@ -94,7 +94,14 @@ class AboutPage extends HookConsumerWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(t.common.appTitle, style: Theme.of(context).textTheme.titleLarge),
+                      Text(
+                        t.common.appTitle,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontFamily: Constants.brandDisplayFontFamily,
+                          fontFamilyFallback: const ['Shabnam', 'sans-serif'],
+                        ),
+                      ),
                       const Gap(4),
                       Text("${t.common.version} ${appInfo.presentVersion}"),
                     ],

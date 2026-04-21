@@ -2,6 +2,7 @@ import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:hiddify/core/app_info/app_info_provider.dart';
+import 'package:hiddify/core/model/constants.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/router/bottom_sheets/bottom_sheets_notifier.dart';
 import 'package:hiddify/features/home/widget/connection_button.dart';
@@ -39,7 +40,14 @@ class HomePage extends HookConsumerWidget {
             Text.rich(
               TextSpan(
                 children: [
-                  TextSpan(text: t.common.appTitle),
+                  TextSpan(
+                    text: t.common.appTitle,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontFamily: Constants.brandDisplayFontFamily,
+                      fontFamilyFallback: const ['Shabnam', 'sans-serif'],
+                    ),
+                  ),
                   const TextSpan(text: " "),
                   const WidgetSpan(child: AppVersionLabel(), alignment: PlaceholderAlignment.middle),
                 ],
