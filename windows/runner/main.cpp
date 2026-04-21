@@ -56,7 +56,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     return EXIT_SUCCESS;
   }
 
-  HANDLE hMutexInstance = CreateMutex(NULL, TRUE, L"TofuRayMutex");
+  HANDLE hMutexInstance = CreateMutex(NULL, TRUE, L"Tofu-rayMutex");
   HWND handle = FindWindowA(NULL, "Tofu-ray");
 
   if (GetLastError() == ERROR_ALREADY_EXISTS)
