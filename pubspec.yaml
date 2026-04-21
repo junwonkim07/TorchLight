@@ -1,5 +1,5 @@
 name: tofu_ray
-description: Tofu-ray: A customized cross-platform proxy client for secure and ad-free internet access.
+description: "Tofu-ray: A customized cross-platform proxy client for secure and ad-free internet access."
 publish_to: "none"
 version: 4.1.2+40102
 
