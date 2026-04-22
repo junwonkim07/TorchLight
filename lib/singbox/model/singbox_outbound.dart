@@ -9,7 +9,7 @@ class SingboxOutboundGroup with _$SingboxOutboundGroup {
   @JsonSerializable(fieldRename: FieldRename.kebab)
   const factory SingboxOutboundGroup({
     required String tag,
-    @JsonKey(fromJson: _typeFromJson) required ProxyType type,
+    @JsonKey(fromJson: _typeFromJson, toJson: _typeToJson) required ProxyType type,
     required String selected,
     @Default([]) List<SingboxOutboundGroupItem> items,
   }) = _SingboxOutboundGroup;
@@ -33,3 +33,4 @@ class SingboxOutboundGroupItem with _$SingboxOutboundGroupItem {
 final Map<String, ProxyType> _keyMap = Map.fromEntries(ProxyType.values.map((e) => MapEntry(e.key, e)));
 
 ProxyType _typeFromJson(dynamic type) => ProxyType.fromJson(type);
+String _typeToJson(ProxyType type) => type.key;
