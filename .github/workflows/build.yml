@@ -17,6 +17,7 @@ env:
   CHANNEL: "${{ inputs.channel }}"
   FLUTTER_VERSION: '3.38.5'
   NDK_VERSION: r28c
+  SKIP_GEN: '1'
   UPLOAD_ARTIFACT: "${{ inputs.upload-artifact }}"
   TAG_NAME: "${{ inputs.tag-name }}"
   TARGET_NAME_gz: "Hiddify-Linux-x64-AppImage.tar"

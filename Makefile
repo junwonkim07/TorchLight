@@ -85,7 +85,14 @@ prepare:
 	@echo    make macos-prepare
 	@echo    make ios-prepare
 
-common-prepare:  get gen translate
+SKIP_GEN ?= 0
+common-prepare: get
+ifeq ($(SKIP_GEN),1)
+	@echo "Skipping code generation (SKIP_GEN=1)"
+else
+	$(MAKE) gen
+endif
+	$(MAKE) translate
 windows-prepare: common-prepare windows-libs
 	
 ios-prepare: common-prepare ios-libs 
@@ -537,9 +544,8 @@ release: # Create a new tag for release.
 
 
 
-ios-temp-prepare: 
+ios-temp-prepare:
 	make ios-prepare
 	flutter build ios-framework
 	cd ios
 	pod install
-	
