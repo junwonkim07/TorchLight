@@ -21,6 +21,7 @@ class AboutPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider).requireValue;
+    final theme = Theme.of(context);
     final appInfo = ref.watch(appInfoProvider).requireValue;
     final appUpdate = ref.watch(appUpdateNotifierProvider);
 
@@ -92,7 +93,7 @@ class AboutPage extends HookConsumerWidget {
                   Assets.images.logo.svg(
                     width: 64,
                     height: 64,
-                    colorFilter: ColorFilter.mode(Theme.of(context).colorScheme.primary, BlendMode.srcIn),
+                    colorFilter: ColorFilter.mode(theme.colorScheme.primary, BlendMode.srcIn),
                   ),
                   const Gap(16),
                   Column(
@@ -100,8 +101,8 @@ class AboutPage extends HookConsumerWidget {
                     children: [
                       Text(
                         t.common.appTitle,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: theme.colorScheme.primary,
                           fontFamily: Constants.brandDisplayFontFamily,
                           fontFamilyFallback: const ['Shabnam', 'sans-serif'],
                         ),
