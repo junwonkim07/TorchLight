@@ -35,7 +35,10 @@ class HomePage extends HookConsumerWidget {
         //     : null,
         title: Row(
           children: [
-            Assets.images.logo.svg(height: 24),
+            Assets.images.logo.svg(
+              height: 24,
+              colorFilter: ColorFilter.mode(theme.colorScheme.primary, BlendMode.srcIn),
+            ),
             const Gap(8),
             Text.rich(
               TextSpan(
