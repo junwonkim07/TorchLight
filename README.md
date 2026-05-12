@@ -83,7 +83,7 @@ flutter build apk --release
 
 ## Configuration
 
-TorchLight works with any Marzban panel or subscription link.
+TorchLight works with any subscription link.
 
 1. Open TorchLight
 2. Tap **Add Profile**
@@ -121,11 +121,3 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a pull request.
 ## License
 
 TorchLight is licensed under the [MIT License](LICENSE.md).
-
----
-
-<div align="center">
-
-**The internet was built for everyone. Reclaim it.**
-
-</div>
