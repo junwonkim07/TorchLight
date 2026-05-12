@@ -18,9 +18,9 @@
 
 ## What is TorchLight?
 
-TorchLight is a free, open-source VPN client built for people living under internet censorship. It cuts through firewalls, bypasses deep packet inspection, and gives you back unrestricted access to the open internet — simply and securely.
+TorchLight is a free, open-source VPN client built for people living under internet censorship.
 
-Built on [Sing-box](https://github.com/SagerNet/sing-box) with support for the latest anti-censorship protocols, TorchLight is designed to work in the world's most restrictive environments: China, Iran, Russia, and beyond.
+Built on [Sing-box](https://github.com/SagerNet/sing-box) with support for the latest anti-censorship protocols, TorchLight is designed to work in the world's most restrictive environments
 
 ---
 
