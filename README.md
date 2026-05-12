@@ -5,7 +5,7 @@
 # TorchLight
 
 **The internet was built for everyone.**
-<p>**Reclaim it.** </p>
+<b><p>Reclaim it.</p></b>
 
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-brightgreen?style=flat-square)](https://github.com/junwonkim07/TorchLight)
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-blue?style=flat-square&logo=flutter)](https://flutter.dev)
@@ -18,9 +18,9 @@
 
 ## What is TorchLight?
 
-TorchLight is a free, open-source VPN client built for people living under internet censorship. It cuts through firewalls, bypasses deep packet inspection, and gives you back unrestricted access to the open internet — simply and securely.
+TorchLight is a free, open-source VPN client built for people living under internet censorship.
 
-Built on [Sing-box](https://github.com/SagerNet/sing-box) with support for the latest anti-censorship protocols, TorchLight is designed to work in the world's most restrictive environments: China, Iran, Russia, and beyond.
+Built on [Sing-box](https://github.com/SagerNet/sing-box) with support for the latest protocols, TorchLight is designed to work in the world's most restrictive environments
 
 ---
 
@@ -83,7 +83,7 @@ flutter build apk --release
 
 ## Configuration
 
-TorchLight works with any Marzban panel or subscription link.
+TorchLight works with any subscription link.
 
 1. Open TorchLight
 2. Tap **Add Profile**
@@ -121,11 +121,3 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a pull request.
 ## License
 
 TorchLight is licensed under the [MIT License](LICENSE.md).
-
----
-
-<div align="center">
-
-**The internet was built for everyone. Reclaim it.**
-
-</div>
