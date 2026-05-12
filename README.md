@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/icon/torch-light.png" width="120" alt="TorchLight Icon"/>
+<img src="assets/icon/torch-light_light.png" width="120" alt="TorchLight Icon"/>
 
 # TorchLight
 
