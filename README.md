@@ -7,7 +7,7 @@
 **The internet was built for everyone.**
 <p><b>Reclaim it.</b><p>
 
-[한국어](README_kr.md)
+[한국어](README_kr.md)/[中文](README_cn.md)
 
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-brightgreen?style=flat-square)](https://github.com/junwonkim07/TorchLight)
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-blue?style=flat-square&logo=flutter)](https://flutter.dev)
